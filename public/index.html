@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Journal App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .container { background: white; padding: 2rem; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 1.5rem; color: #333; }
+    .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid #eee; }
+    .tab { flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; color: #888; font-weight: bold; }
+    .tab.active { color: #4a90e2; border-bottom: 2px solid #4a90e2; margin-bottom: -2px; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.4rem; color: #555; font-size: 0.9rem; }
+    input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    input:focus { outline: none; border-color: #4a90e2; }
+    button { width: 100%; padding: 0.75rem; background: #4a90e2; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; margin-top: 0.5rem; }
+    button:hover { background: #357abd; }
+    .message { margin-top: 1rem; padding: 0.75rem; border-radius: 4px; text-align: center; font-size: 0.9rem; display: none; }
+    .message.success { background: #d4edda; color: #155724; display: block; }
+    .message.error { background: #f8d7da; color: #721c24; display: block; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📔 My Journal</h1>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('login')">Login</div>
+    <div class="tab" onclick="showTab('register')">Register</div>
+  </div>
+
+  <!-- Login Form -->
+  <div id="login-form">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Your password" />
+    </div>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- Register Form -->
+  <div id="register-form" class="hidden">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="Min 8 characters" />
+    </div>
+    <button onclick="register()">Register</button>
+  </div>
+
+  <!-- Confirm Form -->
+  <div id="confirm-form" class="hidden">
+    <p style="margin-bottom:1rem;color:#555;">Check your email for a verification code.</p>
+    <div class="form-group">
+      <label>Verification Code</label>
+      <input type="text" id="confirm-code" placeholder="123456" />
+    </div>
+    <button onclick="confirmUser()">Verify Account</button>
+  </div>
+
+  <div id="message" class="message"></div>
+</div>
+
+<script>
+  const COGNITO_CLIENT_ID = 'nbeh8ddf6m91bgt3bu3n9sbno';
+  const COGNITO_REGION = 'ap-south-1';
+  const API_URL = 'http://15.206.122.125:3000';
+
+  let pendingEmail = '';
+
+  function showTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('confirm-form').classList.add('hidden');
+    document.getElementById(tab + '-form').classList.remove('hidden');
+    clearMessage();
+  }
+
+  function showMessage(text, type) {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = 'message ' + type;
+  }
+
+  function clearMessage() {
+    const el = document.getElementById('message');
+    el.className = 'message';
+    el.textContent = '';
+  }
+
+  async function register() {
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    if (!email || !password) {
+      return showMessage('Please fill in all fields', 'error');
+    }
+
+    try {
+      const res = await fetch(`https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.SignUp'
+        },
+        body: JSON.stringify({
+          ClientId: COGNITO_CLIENT_ID,
+          Username: email,
+          Password: password,
+          UserAttributes: [{ Name: 'email', Value: email }]
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return showMessage(data.message || 'Registration failed', 'error');
+      }
+
+      pendingEmail = email;
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('confirm-form').classList.remove('hidden');
+      showMessage('Registration successful! Check your email.', 'success');
+
+    } catch (err) {
+      showMessage('Something went wrong', 'error');
+    }
+  }
+
+  async function confirmUser() {
+    const code = document.getElementById('confirm-code').value.trim();
+
+    try {
+      const res = await fetch(`https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.ConfirmSignUp'
+        },
+        body: JSON.stringify({
+          ClientId: COGNITO_CLIENT_ID,
+          Username: pendingEmail,
+          ConfirmationCode: code
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return showMessage(data.message || 'Verification failed', 'error');
+      }
+
+      showMessage('Account verified! You can now login.', 'success');
+      document.getElementById('confirm-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+
+    } catch (err) {
+      showMessage('Something went wrong', 'error');
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+      return showMessage('Please fill in all fields', 'error');
+    }
+
+    try {
+      const res = await fetch(`https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth'
+        },
+        body: JSON.stringify({
+          AuthFlow: 'USER_PASSWORD_AUTH',
+          ClientId: COGNITO_CLIENT_ID,
+          AuthParameters: {
+            USERNAME: email,
+            PASSWORD: password
+          }
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return showMessage(data.message || 'Login failed', 'error');
+      }
+
+      const token = data.AuthenticationResult.AccessToken;
+      localStorage.setItem('token', token);
+      window.location.href = '/dashboard.html';
+
+    } catch (err) {
+      showMessage('Something went wrong', 'error');
+    }
+  }
+</script>
+</body>
+</html>

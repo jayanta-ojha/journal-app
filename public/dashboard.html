@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Journal - Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; }
+    header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header h1 { color: #333; font-size: 1.4rem; }
+    button { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem; }
+    .btn-primary { background: #4a90e2; color: white; }
+    .btn-primary:hover { background: #357abd; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-secondary { background: #95a5a6; color: white; }
+    .btn-secondary:hover { background: #7f8c8d; }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .new-journal-btn { margin-bottom: 1.5rem; }
+    .journal-card { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+    .journal-card h3 { color: #333; margin-bottom: 0.5rem; }
+    .journal-card p { color: #666; font-size: 0.95rem; margin-bottom: 0.5rem; line-height: 1.5; }
+    .journal-card .meta { font-size: 0.8rem; color: #999; margin-bottom: 1rem; }
+    .journal-card img { max-width: 100%; border-radius: 4px; margin-bottom: 1rem; }
+    .card-actions { display: flex; gap: 0.5rem; }
+    .empty { text-align: center; color: #999; padding: 3rem; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 8px; padding: 2rem; width: 100%; max-width: 500px; }
+    .modal h2 { margin-bottom: 1.5rem; color: #333; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.4rem; color: #555; font-size: 0.9rem; }
+    input[type="text"], textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    textarea { height: 150px; resize: vertical; }
+    input[type="file"] { width: 100%; padding: 0.5rem 0; }
+    .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+    .message { padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
+    .message.error { background: #f8d7da; color: #721c24; display: block; }
+    .message.success { background: #d4edda; color: #155724; display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📔 My Journal</h1>
+  <button class="btn-danger" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+  <div class="new-journal-btn">
+    <button class="btn-primary" onclick="openModal()">+ New Journal</button>
+  </div>
+  <div id="message" class="message"></div>
+  <div id="journals-list"></div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">New Journal</h2>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="journal-title" placeholder="Journal title" />
+    </div>
+    <div class="form-group">
+      <label>Content</label>
+      <textarea id="journal-content" placeholder="Write your thoughts..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Image (optional)</label>
+      <input type="file" id="journal-image" accept="image/*" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveJournal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'http://15.206.122.125:3000';
+  const token = localStorage.getItem('token');
+  let editingJournalId = null;
+
+  // Redirect to login if no token
+  if (!token) {
+    window.location.href = '/';
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/';
+  }
+
+  function showMessage(text, type) {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = 'message ' + type;
+    setTimeout(() => { el.className = 'message'; }, 4000);
+  }
+
+  function openModal(journal = null) {
+    editingJournalId = null;
+    document.getElementById('modal-title').textContent = 'New Journal';
+    document.getElementById('journal-title').value = '';
+    document.getElementById('journal-content').value = '';
+    document.getElementById('journal-image').value = '';
+
+    if (journal) {
+      editingJournalId = journal.journalId;
+      document.getElementById('modal-title').textContent = 'Edit Journal';
+      document.getElementById('journal-title').value = journal.title;
+      document.getElementById('journal-content').value = journal.content;
+    }
+
+    document.getElementById('modal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+  }
+
+  async function loadJournals() {
+    try {
+      const res = await fetch(`${API_URL}/journals`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+
+      const journals = await res.json();
+      const container = document.getElementById('journals-list');
+
+      if (journals.length === 0) {
+        container.innerHTML = '<div class="empty">No journal entries yet. Create your first one!</div>';
+        return;
+      }
+
+      // Sort newest first
+      journals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      container.innerHTML = journals.map(j => `
+        <div class="journal-card">
+          <h3>${escapeHtml(j.title)}</h3>
+          <div class="meta">${new Date(j.createdAt).toLocaleString()}</div>
+          ${j.imageUrl ? `<img src="${j.imageUrl}" alt="Journal image" onerror="this.style.display='none'" />` : ''}
+          <p>${escapeHtml(j.content)}</p>
+          <div class="card-actions">
+            <button class="btn-primary" onclick='openModal(${JSON.stringify(j)})'>Edit</button>
+            <button class="btn-danger" onclick="deleteJournal('${j.journalId}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (err) {
+      showMessage('Failed to load journals', 'error');
+    }
+  }
+
+  async function saveJournal() {
+    const title = document.getElementById('journal-title').value.trim();
+    const content = document.getElementById('journal-content').value.trim();
+    const imageFile = document.getElementById('journal-image').files[0];
+
+    if (!title || !content) {
+      return showMessage('Title and content are required', 'error');
+    }
+
+    try {
+      let imageUrl = null;
+
+      // Upload image first if provided
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        const uploadRes = await fetch(`${API_URL}/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) {
+          return showMessage('Image upload failed', 'error');
+        }
+        imageUrl = uploadData.presignedUrl;
+      }
+
+      const body = { title, content };
+      if (imageUrl) body.imageUrl = imageUrl;
+
+      const url = editingJournalId
+        ? `${API_URL}/journals/${editingJournalId}`
+        : `${API_URL}/journals`;
+
+      const method = editingJournalId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        return showMessage('Failed to save journal', 'error');
+      }
+
+      closeModal();
+      showMessage(editingJournalId ? 'Journal updated!' : 'Journal created!', 'success');
+      loadJournals();
+
+    } catch (err) {
+      showMessage('Something went wrong', 'error');
+    }
+  }
+
+  async function deleteJournal(journalId) {
+    if (!confirm('Are you sure you want to delete this journal?')) return;
+
+    try {
+      const res = await fetch(`${API_URL}/journals/${journalId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        return showMessage('Failed to delete journal', 'error');
+      }
+
+      showMessage('Journal deleted', 'success');
+      loadJournals();
+
+    } catch (err) {
+      showMessage('Something went wrong', 'error');
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  // Load journals on page load
+  loadJournals();
+</script>
+</body>
+</html>
