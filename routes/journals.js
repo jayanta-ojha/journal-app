@@ -1,3 +1,7 @@
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const s3Client = require('../config/s3.js');
+
 const express = require('express');
 const { PutCommand, GetCommand, QueryCommand, UpdateCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const { v4: uuidv4 } = require('uuid');
@@ -9,23 +13,41 @@ router.use(authenticate);
 
 const TABLE_NAME = 'journals';
 
+const BUCKET_NAME = 'journal-images-jayanta';
+
+async function attachPresignedUrl(journal) {
+  if (journal.imageKey) {
+    journal.imageUrl = await getSignedUrl(
+      s3Client,
+      new GetObjectCommand({ Bucket: BUCKET_NAME, Key: journal.imageKey }),
+      { expiresIn: 900 }
+    );
+  }
+  return journal;
+}
+
+
 // CREATE journal
 router.post('/', async (req, res) => {
   try {
-    const { title, content, imageUrl } = req.body;
+    
+    const { title, content, imageKey } = req.body;
     const userId = req.userId;
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content are required' });
-    }
+
+   if (!title || !content) {
+  	return res.status(400).json({ error: 'Title and content are required' });
+   }
+
     const journal = {
-      userId,
-      journalId: uuidv4(),
-      title,
-      content,
-      ...(imageUrl && { imageUrl }),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  	userId,
+  	journalId: uuidv4(),
+  	title,
+  	content,
+  	...(imageKey && { imageKey }),
+  	createdAt: new Date().toISOString(),
+  	updatedAt: new Date().toISOString(),
     };
+
     await docClient.send(new PutCommand({
       TableName: TABLE_NAME,
       Item: journal,
@@ -46,7 +68,10 @@ router.get('/', async (req, res) => {
       KeyConditionExpression: 'userId = :uid',
       ExpressionAttributeValues: { ':uid': userId },
     }));
-    res.status(200).json(result.Items);
+   
+    const journals = await Promise.all(result.Items.map(attachPresignedUrl));
+    res.status(200).json(journals);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch journals' });
@@ -65,7 +90,10 @@ router.get('/:journalId', async (req, res) => {
     if (!result.Item) {
       return res.status(404).json({ error: 'Journal not found' });
     }
-    res.status(200).json(result.Item);
+    
+   const journal = await attachPresignedUrl(result.Item);
+   res.status(200).json(journal);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch journal' });
@@ -85,13 +113,14 @@ router.put('/:journalId', async (req, res) => {
     const result = await docClient.send(new UpdateCommand({
   TableName: TABLE_NAME,
   Key: { userId, journalId },
-  UpdateExpression: 'set title = :t, content = :c, updatedAt = :u' + (req.body.imageUrl ? ', imageUrl = :i' : ''),
+  UpdateExpression: 'set title = :t, content = :c, updatedAt = :u' + (req.body.imageKey ? ', imageKey = :i' : ''),
   ExpressionAttributeValues: {
-    ':t': title,
-    ':c': content,
-    ':u': new Date().toISOString(),
-    ...(req.body.imageUrl && { ':i': req.body.imageUrl }),
-  },
+  	':t': title,
+  	':c': content,
+  	':u': new Date().toISOString(),
+  	...(req.body.imageKey && { ':i': req.body.imageKey }),
+   },
+
   ConditionExpression: 'attribute_exists(journalId)',
   ReturnValues: 'ALL_NEW',
 }));

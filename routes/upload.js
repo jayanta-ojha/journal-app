@@ -2,8 +2,6 @@ const authenticate = require('../middleware/auth.js');
 const express = require('express');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { GetObjectCommand } = require('@aws-sdk/client-s3');
 const s3Client = require('../config/s3.js');
 
 const router = express.Router();
@@ -42,18 +40,11 @@ router.post('/', upload.single('image'), async (req, res) => {
 
     const key = req.file.key;
 
-    // Generate presigned URL valid for 15 minutes
-    const presignedUrl = await getSignedUrl(
-      s3Client,
-      new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key }),
-      { expiresIn: 900 }
-    );
-
     res.status(201).json({
-      message: 'Image uploaded successfully',
-      key,
-      presignedUrl,
+  	message: 'Image uploaded successfully',
+  	key,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to upload image' });

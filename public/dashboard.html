@@ -81,7 +81,7 @@
 </div>
 
 <script>
-  const API_URL = 'http://15.206.122.125:3000';
+  const API_URL = 'http://3.6.65.66:3000';
   const token = localStorage.getItem('token');
   let editingJournalId = null;
 
@@ -176,25 +176,27 @@
       let imageUrl = null;
 
       // Upload image first if provided
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('image', imageFile);
+      
+if (imageFile) {
+  const formData = new FormData();
+  formData.append('image', imageFile);
 
-        const uploadRes = await fetch(`${API_URL}/upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
+  const uploadRes = await fetch(`${API_URL}/upload`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData
+  });
 
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok) {
-          return showMessage('Image upload failed', 'error');
-        }
-        imageUrl = uploadData.presignedUrl;
-      }
+  const uploadData = await uploadRes.json();
+  if (!uploadRes.ok) {
+    return showMessage('Image upload failed', 'error');
+  }
+  imageUrl = uploadData.key;
+}
 
-      const body = { title, content };
-      if (imageUrl) body.imageUrl = imageUrl;
+const body = { title, content };
+if (imageUrl) body.imageKey = imageUrl;
+
 
       const url = editingJournalId
         ? `${API_URL}/journals/${editingJournalId}`
