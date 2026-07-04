@@ -1,0 +1,419 @@
+/* ==========================================================================
+   Premium Design System Tokens & Color Variables
+   ========================================================================== */
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Layout Scale Constants */
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --transition-smooth: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Light Variant Color Palette (Default Colors) */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-focus: #3b82f6;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --accent-blue: #2563eb;
+  --accent-blue-hover: #1d4ed8;
+  --accent-purple: #7c3aed;
+
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 40px 64px -16px rgba(15, 23, 42, 0.06);
+}
+
+/* Dark Variant Theme Override Mode */
+[data-theme="dark"] {
+  --bg-app: #09090b;
+  --bg-surface: #121214;
+  --bg-surface-hover: #1a1a1e;
+  --border-color: #222226;
+  --border-focus: #3b82f6;
+
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
+
+  --accent-blue: #3b82f6;
+  --accent-blue-hover: #60a5fa;
+  --accent-purple: #a78bfa;
+
+  --shadow-card: 0 40px 80px -24px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   Base CSS Resets & Background Ambiance setup
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
+}
+
+/* Ambient Glow Decorative Elements */
+.glow-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glow-orb {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: var(--radius-full);
+  filter: blur(120px);
+  opacity: 0.04;
+  transition: opacity var(--transition-smooth);
+}
+
+[data-theme="dark"] .glow-orb {
+  opacity: 0.07;
+}
+
+.orb-1 {
+  top: -10%;
+  left: -10%;
+  background-color: var(--accent-blue);
+}
+
+.orb-2 {
+  bottom: -10%;
+  right: -10%;
+  background-color: var(--accent-purple);
+}
+
+/* ==========================================================================
+   Structural Auth Page Grid Layout
+   ========================================================================== */
+.auth-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header Navbar Configuration */
+.auth-header {
+  height: 72px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+/* Main Container Workspace Positioning */
+.auth-container {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem 4rem 1rem;
+}
+
+/* ==========================================================================
+   Premium Interface Authentication Card Redesign
+   ========================================================================== */
+.auth-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  box-shadow: var(--shadow-card);
+  animation: authCardEntrance var(--transition-smooth) ease forwards;
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
+}
+
+.auth-card-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-card-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.auth-card-header .subtitle {
+  color: var(--text-secondary);
+  font-size: 0.925rem;
+  line-height: 1.5;
+}
+
+/* Segmented Control Tabs UI Modules */
+.tabs {
+  display: flex;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.55rem 0;
+  cursor: pointer;
+  border-radius: calc(var(--radius-md) - 2px);
+  transition: var(--transition-smooth);
+}
+
+.tab.active {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-premium);
+}
+
+/* ==========================================================================
+   Form Input Panels & Groups Frameworks
+   ========================================================================== */
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: panelFadeIn var(--transition-smooth) ease forwards;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  transition: var(--transition-smooth);
+}
+
+.form-group input:focus {
+  outline: none;
+  background-color: var(--bg-surface);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+/* ==========================================================================
+   Buttons Global UI Definitions
+   ========================================================================== */
+button.btn-primary {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  transition: var(--transition-smooth);
+}
+
+button.btn-primary:hover {
+  background-color: var(--accent-blue-hover);
+}
+
+button.btn-primary:active {
+  transform: scale(0.98);
+}
+
+button.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Icon Buttons Setup Variants */
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.btn-icon:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.icon-sun, [data-theme="dark"] .icon-moon { display: none; }
+[data-theme="dark"] .icon-sun { display: block; }
+
+/* ==========================================================================
+   Verification Code Content Frame Panel
+   ========================================================================== */
+.verification-notice {
+  background-color: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.notice-icon {
+  color: var(--accent-blue);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.verification-notice p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+#confirm-code {
+  letter-spacing: 0.25em;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Utility Hidden States Rules */
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   Toast Notification Systems Workspace Definitions
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-blue);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 280px;
+  max-width: 380px;
+  animation: toastSlideIn var(--transition-smooth) ease forwards;
+}
+
+.toast.success { border-left-color: #10b981; }
+.toast.error { border-left-color: #ef4444; }
+
+/* Micro-spinner animation element */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-full);
+  border-top-color: #ffffff;
+  animation: spin 0.8s infinite linear;
+}
+
+/* ==========================================================================
+   CSS Entrance Animation Keyframes Scale Maps
+   ========================================================================== */
+@keyframes authCardEntrance {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: scale(0.99) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Responsive Display Adaptations Rules
+   ========================================================================== */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.75rem;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+  .auth-header { padding: 0 1rem; }
+}

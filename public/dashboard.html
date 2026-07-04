@@ -3,258 +3,159 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Journal - Dashboard</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; }
-    header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    header h1 { color: #333; font-size: 1.4rem; }
-    button { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem; }
-    .btn-primary { background: #4a90e2; color: white; }
-    .btn-primary:hover { background: #357abd; }
-    .btn-danger { background: #e74c3c; color: white; }
-    .btn-danger:hover { background: #c0392b; }
-    .btn-secondary { background: #95a5a6; color: white; }
-    .btn-secondary:hover { background: #7f8c8d; }
-    .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-    .new-journal-btn { margin-bottom: 1.5rem; }
-    .journal-card { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-    .journal-card h3 { color: #333; margin-bottom: 0.5rem; }
-    .journal-card p { color: #666; font-size: 0.95rem; margin-bottom: 0.5rem; line-height: 1.5; }
-    .journal-card .meta { font-size: 0.8rem; color: #999; margin-bottom: 1rem; }
-    .journal-card img { max-width: 100%; border-radius: 4px; margin-bottom: 1rem; }
-    .card-actions { display: flex; gap: 0.5rem; }
-    .empty { text-align: center; color: #999; padding: 3rem; }
-
-    /* Modal */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
-    .modal-overlay.active { display: flex; }
-    .modal { background: white; border-radius: 8px; padding: 2rem; width: 100%; max-width: 500px; }
-    .modal h2 { margin-bottom: 1.5rem; color: #333; }
-    .form-group { margin-bottom: 1rem; }
-    label { display: block; margin-bottom: 0.4rem; color: #555; font-size: 0.9rem; }
-    input[type="text"], textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
-    textarea { height: 150px; resize: vertical; }
-    input[type="file"] { width: 100%; padding: 0.5rem 0; }
-    .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
-    .message { padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
-    .message.error { background: #f8d7da; color: #721c24; display: block; }
-    .message.success { background: #d4edda; color: #155724; display: block; }
-  </style>
+  <title>Journal — Dashboard</title>
+  <!-- Inter & SF Pro Inspired Font Stack -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css" />
 </head>
 <body>
 
-<header>
-  <h1>📔 My Journal</h1>
-  <button class="btn-danger" onclick="logout()">Logout</button>
-</header>
+  <!-- Theme initialization script to prevent white/dark flashes -->
+  <script src="js/theme.js"></script>
 
-<div class="container">
-  <div class="new-journal-btn">
-    <button class="btn-primary" onclick="openModal()">+ New Journal</button>
-  </div>
-  <div id="message" class="message"></div>
-  <div id="journals-list"></div>
-</div>
+  <!-- Navigation Bar -->
+  <nav class="navbar" role="navigation" aria-label="Main Navigation">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3Custom 21 5 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 7H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 12H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 17H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Journal</span>
+        </div>
+      </div>
+      
+      <div class="nav-right">
+        <div class="search-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="search" id="search-box" placeholder="Search entries..." aria-label="Search journals" />
+        </div>
 
-<!-- Create/Edit Modal -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h2 id="modal-title">New Journal</h2>
-    <div class="form-group">
-      <label>Title</label>
-      <input type="text" id="journal-title" placeholder="Journal title" />
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle visual theme" title="Toggle Theme">
+          <!-- Moon Icon (Visible in Light Mode) -->
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <!-- Sun Icon (Visible in Dark Mode) -->
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+
+        <div class="user-profile" aria-haspopup="true">
+          <div class="avatar" id="user-avatar">J</div>
+        </div>
+
+        <button class="btn-secondary btn-logout" onclick="logout()" aria-label="Log out of application">
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Content</label>
-      <textarea id="journal-content" placeholder="Write your thoughts..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>Image (optional)</label>
-      <input type="file" id="journal-image" accept="image/*" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveJournal()">Save</button>
-    </div>
-  </div>
-</div>
+  </nav>
 
-<script>
-  const API_URL = 'http://3.6.65.66:3000';
-  const token = localStorage.getItem('token');
-  let editingJournalId = null;
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- Welcome Header Section -->
+    <header class="welcome-section">
+      <div class="welcome-text">
+        <h1 id="welcome-heading">Welcome back</h1>
+        <p class="subtitle">Capture your thoughts, ideas, and daily engineering logs.</p>
+      </div>
+      <button class="btn-primary" onclick="openModal()" aria-haspopup="dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Journal
+      </button>
+    </header>
 
-  // Redirect to login if no token
-  if (!token) {
-    window.location.href = '/';
-  }
+    <!-- Metrics/Stats Grid -->
+    <section class="stats-grid" aria-label="Overview Statistics">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Total Journals</p>
+          <h3 class="stat-value" id="stat-total">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Images Uploaded</p>
+          <h3 class="stat-value" id="stat-images">0</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper amber">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Last Updated</p>
+          <h3 class="stat-value" id="stat-updated">Never</h3>
+        </div>
+      </div>
+    </section>
 
-  function logout() {
-    localStorage.removeItem('token');
-    window.location.href = '/';
-  }
+    <!-- Content Area / Dynamic Lists -->
+    <section class="content-area" aria-live="polite">
+      <div id="journals-list" class="journals-grid">
+        <!-- Skeleton Loaders appear here automatically by default -->
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+    </section>
+  </main>
 
-  function showMessage(text, type) {
-    const el = document.getElementById('message');
-    el.textContent = text;
-    el.className = 'message ' + type;
-    setTimeout(() => { el.className = 'message'; }, 4000);
-  }
-
-  function openModal(journal = null) {
-    editingJournalId = null;
-    document.getElementById('modal-title').textContent = 'New Journal';
-    document.getElementById('journal-title').value = '';
-    document.getElementById('journal-content').value = '';
-    document.getElementById('journal-image').value = '';
-
-    if (journal) {
-      editingJournalId = journal.journalId;
-      document.getElementById('modal-title').textContent = 'Edit Journal';
-      document.getElementById('journal-title').value = journal.title;
-      document.getElementById('journal-content').value = journal.content;
-    }
-
-    document.getElementById('modal').classList.add('active');
-  }
-
-  function closeModal() {
-    document.getElementById('modal').classList.remove('active');
-  }
-
-  async function loadJournals() {
-    try {
-      const res = await fetch(`${API_URL}/journals`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
-      const journals = await res.json();
-      const container = document.getElementById('journals-list');
-
-      if (journals.length === 0) {
-        container.innerHTML = '<div class="empty">No journal entries yet. Create your first one!</div>';
-        return;
-      }
-
-      // Sort newest first
-      journals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      container.innerHTML = journals.map(j => `
-        <div class="journal-card">
-          <h3>${escapeHtml(j.title)}</h3>
-          <div class="meta">${new Date(j.createdAt).toLocaleString()}</div>
-          ${j.imageUrl ? `<img src="${j.imageUrl}" alt="Journal image" onerror="this.style.display='none'" />` : ''}
-          <p>${escapeHtml(j.content)}</p>
-          <div class="card-actions">
-            <button class="btn-primary" onclick='openModal(${JSON.stringify(j)})'>Edit</button>
-            <button class="btn-danger" onclick="deleteJournal('${j.journalId}')">Delete</button>
+  <!-- Create/Edit Overlay Modal -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title">New Journal</h2>
+        <button class="btn-icon close-modal-btn" onclick="closeModal()" aria-label="Close configuration overlay">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="journal-title">Title</label>
+          <input type="text" id="journal-title" placeholder="Give your entry a title..." />
+        </div>
+        <div class="form-group">
+          <label for="journal-content">Content</label>
+          <textarea id="journal-content" placeholder="Write your thoughts... What did you build today?"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Cover Asset</label>
+          <div class="file-drop-area">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span class="upload-text">Click or drag an image to attach</span>
+            <input type="file" id="journal-image" accept="image/*" aria-label="Upload journal image layout" />
+          </div>
+          <!-- Real-time Image preview sandbox rendering element -->
+          <div class="image-preview-wrapper hidden" id="preview-container">
+            <img id="image-upload-preview" src="#" alt="Upload preview asset visualization" />
+            <button class="remove-preview-btn" id="btn-remove-preview" title="Remove image">&times;</button>
           </div>
         </div>
-      `).join('');
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="btn-save-journal" onclick="saveJournal()">
+          <span>Save Entry</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
-    } catch (err) {
-      showMessage('Failed to load journals', 'error');
-    }
-  }
+  <!-- Toast Notification Container Workspace -->
+  <div class="toast-container" id="toast-container" role="live" aria-live="assertive"></div>
 
-  async function saveJournal() {
-    const title = document.getElementById('journal-title').value.trim();
-    const content = document.getElementById('journal-content').value.trim();
-    const imageFile = document.getElementById('journal-image').files[0];
-
-    if (!title || !content) {
-      return showMessage('Title and content are required', 'error');
-    }
-
-    try {
-      let imageUrl = null;
-
-      // Upload image first if provided
-      
-if (imageFile) {
-  const formData = new FormData();
-  formData.append('image', imageFile);
-
-  const uploadRes = await fetch(`${API_URL}/upload`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` },
-    body: formData
-  });
-
-  const uploadData = await uploadRes.json();
-  if (!uploadRes.ok) {
-    return showMessage('Image upload failed', 'error');
-  }
-  imageUrl = uploadData.key;
-}
-
-const body = { title, content };
-if (imageUrl) body.imageKey = imageUrl;
-
-
-      const url = editingJournalId
-        ? `${API_URL}/journals/${editingJournalId}`
-        : `${API_URL}/journals`;
-
-      const method = editingJournalId ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!res.ok) {
-        return showMessage('Failed to save journal', 'error');
-      }
-
-      closeModal();
-      showMessage(editingJournalId ? 'Journal updated!' : 'Journal created!', 'success');
-      loadJournals();
-
-    } catch (err) {
-      showMessage('Something went wrong', 'error');
-    }
-  }
-
-  async function deleteJournal(journalId) {
-    if (!confirm('Are you sure you want to delete this journal?')) return;
-
-    try {
-      const res = await fetch(`${API_URL}/journals/${journalId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!res.ok) {
-        return showMessage('Failed to delete journal', 'error');
-      }
-
-      showMessage('Journal deleted', 'success');
-      loadJournals();
-
-    } catch (err) {
-      showMessage('Something went wrong', 'error');
-    }
-  }
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(text));
-    return div.innerHTML;
-  }
-
-  // Load journals on page load
-  loadJournals();
-</script>
+  <!-- Framework App Controller Script Modules -->
+  <script src="js/dashboard.js"></script>
 </body>
 </html>
